@@ -12,7 +12,7 @@ import kotlinx.serialization.Serializable
 data class BreedsApiModel (
     @SerialName("id") val breedId: String,
     val name: String,
-    val altNames: String = "",
+    @SerialName("alt_names") val altNames: String = "",
     val description: String,
     val temperament: String,
 )

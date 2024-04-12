@@ -8,11 +8,8 @@ interface BreedListContract {
         val breeds: List<BreedUiModel> = emptyList(),
         val query: String = "",
         var filteredBreeds: List<BreedUiModel> = emptyList(),
-        val isSearchMode: Boolean = false,
     )
     sealed class BreedListUiEvent {
         data class SearchQueryChanged(val query: String) : BreedListUiEvent()
-        data object ClearSearch : BreedListUiEvent()
-        data object CloseSearchMode : BreedListUiEvent()
     }
 }

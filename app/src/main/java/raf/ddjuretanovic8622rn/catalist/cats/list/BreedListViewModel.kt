@@ -30,21 +30,20 @@ class BreedListViewModel(
     private fun setState(reducer: BreedListState.() -> BreedListState) = _state.update(reducer)
     private val events = MutableSharedFlow<BreedListUiEvent>()
     fun setEvent(event: BreedListUiEvent) = viewModelScope.launch { events.emit(event) }
-    private val TAG = "BreedListViewModel"
+    val TAG = "BreedListViewModel"
+
     init {
-        observeSearchQuery()
         fetchAll()
         observeEvents()
+        observeSearchQuery()
     }
 
     private fun observeEvents() {
         viewModelScope.launch {
             events.collect {
                 when (it) {
-                    BreedListUiEvent.ClearSearch -> Unit
-                    BreedListUiEvent.CloseSearchMode -> setState { copy(isSearchMode = false) }
                     is BreedListUiEvent.SearchQueryChanged -> {
-                        it.query
+                        setState { copy(query = it.query) }
                     }
                 }
             }
@@ -55,16 +54,15 @@ class BreedListViewModel(
         viewModelScope.launch {
             setState { copy(loading = true) }
             try {
-                delay(5.seconds)
+                delay(2.seconds)
                 val breeds = withContext(Dispatchers.IO) {
-                    repository.getBreeds().map {
-                        it.asBreedUiModel()
-                    }
+                    repository.getBreeds().map { it.asBreedUiModel() }
                 }
-                setState { copy(breeds = breeds)}
+                setState { copy(breeds = breeds) }
+                setState { copy(filteredBreeds = breeds) }
                 Log.i(TAG, "fetchAll: Finished fetching data.\nSample: ${breeds.first()}")
             } catch (e: Exception) {
-                Log.e(TAG, "fetchAll: Exception: $e", )
+                Log.e(TAG, "fetchAll: Exception: $e")
             } finally {
                 setState { copy(loading = false) }
             }
@@ -75,11 +73,19 @@ class BreedListViewModel(
     private fun observeSearchQuery() {
         viewModelScope.launch {
             events.filterIsInstance<BreedListUiEvent.SearchQueryChanged>()
-                .debounce(500.0.milliseconds)
-                .collect {
+                .debounce(500.0.milliseconds).collect {
                     val filtered = state.value.breeds.filter {
-                        it.name.contains(state.value.query, ignoreCase = true)
+                        it.name.contains(
+                            state.value.query,
+                            ignoreCase = true
+                        ) || it.altNames.find { name ->
+                            name.contains(
+                                state.value.query,
+                                ignoreCase = true
+                            )
+                        } != null
                     }
+                    Log.i(TAG, "observeSearchQuery: Search query is: ${state.value.query}")
                     _state.value = _state.value.copy(filteredBreeds = filtered)
                 }
         }
@@ -88,8 +94,8 @@ class BreedListViewModel(
     private fun BreedsApiModel.asBreedUiModel() = BreedUiModel(
         id = this.breedId,
         name = this.name,
-        altNames = this.altNames,
+        altNames = this.altNames.split(", "),
         description = this.description,
-        temperament = this.temperament
+        temperament = this.temperament.split(", "),
     )
 }
