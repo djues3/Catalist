@@ -1,4 +1,4 @@
-package raf.ddjuretanovic8622rn.catalist.networking
+upackage raf.ddjuretanovic8622rn.catalist.networking
 
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
@@ -19,7 +19,7 @@ val AppJson = Json {
 val okHttpClient= OkHttpClient.Builder()
     .addInterceptor {
         val request = it.request().newBuilder()
-            .addHeader("x-api-key", "live_uD7Zbg43O1QGbZ82cKzRuBNAMLIiDU7ieKA5M0NdudabP98rGTxkmo7TH5qyHkJG")
+            .addHeader("x-api-key","YOUR-API-KEY-HERE")
             .build()
         it.proceed(request)
     }
