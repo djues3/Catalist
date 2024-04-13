@@ -11,8 +11,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -28,9 +28,11 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import raf.ddjuretanovic8622rn.catalist.cats.list.BreedListContract.BreedListEvent
 import raf.ddjuretanovic8622rn.catalist.cats.list.BreedListContract.BreedListState
-import raf.ddjuretanovic8622rn.catalist.cats.list.BreedListContract.BreedListUiEvent
 
+
+private const val TAG = "BreedListScreen"
 
 @OptIn(ExperimentalMaterial3Api::class)
 fun NavGraphBuilder.breeds(
@@ -51,38 +53,44 @@ fun NavGraphBuilder.breeds(
 @Composable
 fun BreedListScreen(
     state: BreedListState,
-    eventPublisher: (uiEvent: BreedListUiEvent) -> Unit,
+    eventPublisher: (uiEvent: BreedListEvent) -> Unit,
     onBreedClick: (String) -> Unit
 ) {
-    Scaffold(content = { paddingValues ->
+    Scaffold { paddingValues ->
         if (state.loading) {
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center,
             ) {
-                Column(modifier = Modifier.padding(vertical = 150.dp)) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
                     Text(
-                        text = "Loading..."
+                        text = "Loading...",
+                        modifier = Modifier.padding(vertical = 20.dp),
                     )
-                    CircularProgressIndicator()
+                    LinearProgressIndicator()
                 }
             }
         } else {
             Column(
                 modifier = Modifier
-                    .padding()
-                    .fillMaxWidth()
+                    .fillMaxSize()
             ) {
-                SearchView(eventPublisher)
+                SearchView(
+                    state = state, eventPublisher = eventPublisher
+                )
                 LazyColumn(
-                    modifier = Modifier.fillMaxSize(), contentPadding = paddingValues
+                    modifier = Modifier.fillMaxWidth(), contentPadding = paddingValues
                 ) {
                     items(items = state.filteredBreeds, key = { it.id }) { breed ->
                         Card(
                             modifier = Modifier
                                 .padding(horizontal = 8.dp)
                                 .padding(16.dp)
-                                .clickable { onBreedClick(breed.id) }
+                                .clickable {
+                                    onBreedClick(breed.id)
+                                }
                                 .fillMaxWidth()
                                 .fillMaxHeight(),
                         ) {
@@ -119,9 +127,15 @@ fun BreedListScreen(
                                 Row(modifier = Modifier.padding(vertical = 8.dp)) {
                                     breed.temperament.shuffled().take(3).forEach {
                                         SuggestionChip(
-                                            label = { Text(text = it) },
                                             onClick = {},
-                                            modifier = Modifier.padding(horizontal = 8.dp)
+                                            label = {
+                                                Text(text = it.mapIndexed { index, c ->
+                                                    if (index == 0) c.uppercaseChar() else c
+                                                }.joinToString(separator = "") {
+                                                    it.toString()
+                                                })
+                                            },
+                                            modifier = Modifier.padding(4.dp)
                                         )
                                     }
                                 }
@@ -132,17 +146,18 @@ fun BreedListScreen(
                 }
             }
         }
-    })
+    }
 }
 
 @Composable
 fun SearchView(
-    eventPublisher: (uiEvent: BreedListUiEvent) -> Unit,
+    state: BreedListState,
+    eventPublisher: (uiEvent: BreedListEvent) -> Unit,
 ) {
-    val searchQuery = remember { mutableStateOf("") }
+    val searchQuery = remember { mutableStateOf(state.query) }
     OutlinedTextField(value = searchQuery.value, onValueChange = {
         searchQuery.value = it
-        eventPublisher(BreedListUiEvent.SearchQueryChanged(it))
+        eventPublisher(BreedListEvent.SearchQueryChanged(it))
     }, label = {
         Text(
             text = "Search",

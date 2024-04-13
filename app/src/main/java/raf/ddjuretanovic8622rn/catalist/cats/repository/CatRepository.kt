@@ -11,5 +11,5 @@ object CatRepository {
 
     suspend fun getBreed(breedId: String) = catsApi.getBreed(breedId)
 
-    suspend fun getBreedByName(breedName: String) = catsApi.getBreedByName(breedName = breedName)
+    suspend fun getImages(breedIds: String) = catsApi.getImages(breedIds)
 }
