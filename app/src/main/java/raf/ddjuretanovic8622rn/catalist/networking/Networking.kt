@@ -1,4 +1,4 @@
-upackage raf.ddjuretanovic8622rn.catalist.networking
+package raf.ddjuretanovic8622rn.catalist.networking
 
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
